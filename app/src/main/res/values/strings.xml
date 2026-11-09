@@ -1,0 +1,138 @@
+<resources>
+    <string name="app_name">SA PC Runner</string>
+
+    <!-- Header & Status -->
+    <string name="header_title_runner">SA PC Runner</string>
+    <string name="header_subtitle_architecture">Bionic ARM64 Hangover Wine • Tanpa PRoot</string>
+    <string name="action_launch_game">Jalankan gta_sa.exe</string>
+    <string name="action_stop_session">Hentikan Sesi</string>
+    <string name="action_open_display">Buka Layar</string>
+
+    <!-- Section Titles -->
+    <string name="section_gpu_probe">Deteksi Perangkat Keras GPU</string>
+    <string name="section_bionic_runtime">Paket Runtime Bionic ARM64</string>
+    <string name="section_game_installation">Instalasi GTA San Andreas PC</string>
+    <string name="section_execution_profile">Profil Eksekusi &amp; Grafis Mali</string>
+
+    <!-- GPU Probe Labels -->
+    <string name="label_gpu_renderer">Renderer GPU</string>
+    <string name="label_gpu_vendor">Vendor &amp; Versi OpenGL ES</string>
+    <string name="label_gpu_max_texture">Batas Tekstur Maksimum</string>
+    <string name="value_gpu_max_texture_px">%1$d x %1$d px</string>
+    <string name="value_gpu_mali_detected">Keluarga ARM Mali Terdeteksi</string>
+    <string name="value_gpu_standard_detected">OpenGL ES Standar</string>
+    <string name="action_reprobe_gpu">Periksa Ulang GPU</string>
+
+    <!-- Runtime Section -->
+    <string name="label_runtime_status">Status Paket Runtime</string>
+    <string name="status_runtime_verified">Terverifikasi (%1$d modul inti)</string>
+    <string name="status_runtime_not_installed">Belum terpasang</string>
+    <string name="status_runtime_extracting">Mengekstrak arsip runtime…</string>
+    <string name="status_runtime_downloading">Mengunduh runtime (%1$d%% • %2$s / %3$s)</string>
+    <string name="label_runtime_wine_elf">Binary Wine ARM64 (ELF64)</string>
+    <string name="label_runtime_translators">Translator PE32 Tersedia</string>
+    <string name="label_runtime_d3d9_stack">Modul DirectX 9 &amp; Winsock</string>
+    <string name="label_runtime_sha256">SHA-256 Arsip Terakhir</string>
+    <string name="value_status_valid">Valid</string>
+    <string name="value_status_missing">Tidak ditemukan</string>
+    <string name="value_translators_both">wowbox64.dll &amp; libwow64fex.dll</string>
+    <string name="value_translators_box64_only">wowbox64.dll</string>
+    <string name="value_translators_fex_only">libwow64fex.dll</string>
+    <string name="action_select_runtime_archive">Pilih Berkas Runtime (.tar.xz / .tar.gz)</string>
+    <string name="action_download_github_runtime">Unduh Runtime dari GitHub Release</string>
+    <string name="action_cancel_download">Batalkan Unduhan</string>
+    <string name="action_remove_runtime">Hapus Runtime Terpasang</string>
+
+    <!-- Game Installation Section -->
+    <string name="label_game_executable">Berkas Eksekusi Utama</string>
+    <string name="status_exe_not_selected">Belum dipilih (pilih gta_sa.exe)</string>
+    <string name="status_exe_valid_pe32">PE32 i386 Valid (%1$s)</string>
+    <string name="status_exe_invalid">Bukan berkas PE32 x86 valid</string>
+    <string name="label_exe_version">Varian Binary Terdeteksi</string>
+    <string name="version_10_us_hoodlum">v1.0 US Compact / Hoodlum (Kompatibel SA-MP)</string>
+    <string name="version_10_eu">v1.0 EU No-CD</string>
+    <string name="version_101_patched">v1.01 Patched</string>
+    <string name="version_30_steam">v3.0 Steam Encrypted</string>
+    <string name="version_custom_pe32">PE32 Kustom (Entry 0x%1$s)</string>
+    <string name="label_exe_entry_point">Alamat Entry Point &amp; Image Base</string>
+    <string name="value_exe_entry_format">RVA 0x%1$s • Base 0x%2$s (%3$s)</string>
+    <string name="label_exe_imported_dlls">Tabel Import DLL PE32</string>
+    <string name="label_exe_laa_flag">Large Address Aware (&gt;2 GB RAM)</string>
+    <string name="desc_exe_laa_flag">Ubah bit 0x0020 pada header PE32 gta_sa.exe untuk alokasi memori di atas 2 GB</string>
+    <string name="label_img_archive">Arsip RenderWare (gta3.img)</string>
+    <string name="status_img_not_selected">Opsional: pilih gta3.img untuk verifikasi aset</string>
+    <string name="status_img_valid_ver2">VER2 Valid (%1$d model DFF, %2$d tekstur TXD, %3$d kolisi COL)</string>
+    <string name="action_select_gtasa_exe">Pilih Berkas gta_sa.exe</string>
+    <string name="action_select_gta3_img">Verifikasi Berkas gta3.img</string>
+
+    <!-- Execution Profile Section -->
+    <string name="label_cpu_translator">Translator CPU PE32 (i386 ke ARM64)</string>
+    <string name="value_translator_box64">Box64 WOW64 (wowbox64.dll)</string>
+    <string name="value_translator_fex">FEX-Emu WOW64 (libwow64fex.dll)</string>
+    <string name="label_mali_graphics_backend">Jalur Grafis GPU Mali</string>
+    <string name="value_backend_virgl">VirGL Server (OpenGL ES 3.2 Native Mali)</string>
+    <string name="value_backend_zink">Mesa Zink (Vulkan Native Mali)</string>
+    <string name="label_render_resolution">Resolusi Render Kontainer</string>
+    <string name="value_res_960_540">960 x 540 (540p Ringan)</string>
+    <string name="value_res_1280_720">1280 x 720 (720p Standar)</string>
+    <string name="value_res_1600_900">1600 x 900 (900p Tajam)</string>
+    <string name="value_res_1920_1080">1920 x 1080 (1080p Penuh)</string>
+    <string name="label_use_dxvk_d3d9">Gunakan DXVK untuk Direct3D 9</string>
+    <string name="desc_use_dxvk_d3d9">Aktifkan override d3d9 native jika memakai jalur Zink/Vulkan</string>
+    <string name="label_box64_strongmem">Model Memori Ketat (BOX64_DYNAREC_STRONGMEM)</string>
+    <string name="desc_box64_strongmem">Menjaga sinkronisasi memori saat samp.dll melakukan inline hooking</string>
+    <string name="label_box64_safeflags">Evaluasi EFLAGS Aman (BOX64_DYNAREC_SAFEFLAGS)</string>
+    <string name="desc_box64_safeflags">Mencegah kesalahan kalkulasi fisika dan kamera RenderWare</string>
+    <string name="label_box64_callret">Optimasi Pasangan CALL/RET (BOX64_DYNAREC_CALLRET)</string>
+    <string name="desc_box64_callret">Mempercepat pemanggilan fungsi berulang pada loop utama gta_sa.exe</string>
+    <string name="label_enable_esync">Sinkronisasi Event Descriptor (WINEESYNC)</string>
+    <string name="desc_enable_esync">Mengurangi beban CPU pada sinkronisasi thread audio dan streaming</string>
+
+    <!-- Display & Input Overlay Screen -->
+    <string name="display_title_active_session">Layar Sesi Eksekusi</string>
+    <string name="display_status_running">PID Wine: %1$d • %2$.1f FPS • RAM: %3$s • Input: %4$d</string>
+    <string name="display_status_stopped">Sesi berhenti (%1$s)</string>
+    <string name="action_toggle_logs">Panel Log</string>
+    <string name="action_toggle_controls">Kontrol Sentuh</string>
+    <string name="label_log_output_header">Log Output Proses Bionic (Wine / Dynarec / VirGL)</string>
+    <string name="label_log_empty">Belum ada output log dari proses.</string>
+
+    <!-- Touch Controls -->
+    <string name="control_move_up">Maju (W)</string>
+    <string name="control_move_down">Mundur (S)</string>
+    <string name="control_move_left">Kiri (A)</string>
+    <string name="control_move_right">Kanan (D)</string>
+    <string name="control_action_fire">Tembak / Pukul</string>
+    <string name="control_action_aim">Bidik</string>
+    <string name="control_action_enter_vehicle">Kendaraan (F)</string>
+    <string name="control_action_jump">Lompat (Spasi)</string>
+    <string name="control_action_sprint">Lari (Shift)</string>
+    <string name="control_action_esc">Menu (ESC)</string>
+    <string name="control_action_samp_chat">Chat (T)</string>
+    <string name="control_action_samp_tab">Skor (TAB)</string>
+
+    <!-- Dialogs & Bottom Sheets -->
+    <string name="sheet_title_select_translator">Pilih Translator CPU PE32</string>
+    <string name="sheet_title_select_backend">Pilih Jalur Grafis Mali</string>
+    <string name="sheet_title_select_resolution">Pilih Resolusi Render</string>
+    <string name="dialog_remove_runtime_title">Hapus Paket Runtime</string>
+    <string name="dialog_remove_runtime_desc">Seluruh berkas Bionic Wine, driver grafis, dan direktori wineprefix yang diekstrak akan dihapus dari penyimpanan internal aplikasi.</string>
+    <string name="action_confirm_delete">Hapus</string>
+    <string name="action_cancel">Batal</string>
+    <string name="action_close">Tutup</string>
+
+    <!-- Messages & Errors -->
+    <string name="msg_runtime_extracted_verified">Runtime berhasil diekstrak (%1$d berkas, %2$d symlink) dan lolos verifikasi ELF64.</string>
+    <string name="msg_laa_patched_enabled">Bit LARGE_ADDRESS_AWARE pada gta_sa.exe berhasil diaktifkan dan diverifikasi.</string>
+    <string name="msg_laa_patched_disabled">Bit LARGE_ADDRESS_AWARE pada gta_sa.exe berhasil dinonaktifkan dan diverifikasi.</string>
+    <string name="msg_runtime_removed">Paket runtime telah dihapus dari penyimpanan aplikasi.</string>
+    <string name="err_runtime_missing_before_launch">Pasang dan verifikasi paket runtime Bionic terlebih dahulu sebelum menjalankan gta_sa.exe.</string>
+    <string name="err_exe_missing_before_launch">Pilih dan verifikasi berkas gta_sa.exe (PE32 i386) terlebih dahulu.</string>
+    <string name="err_copy_selected_file">Gagal menyalin berkas dari penyimpanan: %1$s</string>
+    <string name="err_download_failed">Gagal mengunduh paket runtime: %1$s</string>
+
+    <plurals name="plural_imported_dlls">
+        <item quantity="one">%1$d modul DLL (%2$s)</item>
+        <item quantity="other">%1$d modul DLL (%2$s)</item>
+    </plurals>
+</resources>
