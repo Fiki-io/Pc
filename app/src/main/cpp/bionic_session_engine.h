@@ -82,6 +82,7 @@ private:
     std::atomic<bool> sessionRunning_{false};
     std::atomic<pid_t> winePid_{-1};
     std::atomic<pid_t> virglPid_{-1};
+    std::atomic<pid_t> x11Pid_{-1};
     std::atomic<int32_t> lastExitCode_{0};
 
     int inputPipeWriteFd_ = -1;

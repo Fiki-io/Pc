@@ -24,6 +24,7 @@ ROOT_PACKAGES = [
     "freetype",
     "fontconfig",
     "xorg-xrandr",
+    "xorg-server-xvfb",
 ]
 
 PREFERRED_ALTERNATIVES = {

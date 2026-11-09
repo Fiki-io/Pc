@@ -498,6 +498,10 @@ bool BionicSessionEngine::startSession(const SessionLaunchConfig& config, std::s
         close(fbFd);
     }
 
+    std::string xvfbBin = config.runtimeRootDir + "/bin/Xvfb";
+    std::string termuxX11Bin = config.runtimeRootDir + "/bin/termux-x11";
+    bool hasXServer = (access(xvfbBin.c_str(), R_OK) == 0) || (access(termuxX11Bin.c_str(), R_OK) == 0);
+
     std::string userRegPath = prefixDir + "/user.reg";
     FILE* regFp = std::fopen(userRegPath.c_str(), "w");
     if (regFp != nullptr) {
@@ -509,12 +513,17 @@ bool BionicSessionEngine::startSession(const SessionLaunchConfig& config, std::s
             "\"csmt\"=dword:00000003\n"
             "\"VideoMemorySize\"=\"512\"\n"
             "\"OffscreenRenderingMode\"=\"fbo\"\n\n"
+            "[Software\\\\Wine\\\\Drivers] 1700000000\n"
+            "\"Graphics\"=\"%s\"\n\n"
             "[Software\\\\Wine\\\\X11 Driver] 1700000000\n"
             "\"MouseWarpOverride\"=\"enable\"\n"
             "\"Decorated\"=\"N\"\n"
-            "\"Managed\"=\"N\"\n\n"
+            "\"Managed\"=\"N\"\n"
+            "\"UseXVidMode\"=\"N\"\n"
+            "\"UseXRandR\"=\"N\"\n\n"
             "[Software\\\\Wine\\\\DllOverrides] 1700000000\n"
             "\"d3d9\"=\"%s\"\n",
+            hasXServer ? "x11" : "null",
             config.useDxvkD3d9 ? "native,builtin" : "builtin"
         );
         std::fclose(regFp);
@@ -607,6 +616,99 @@ bool BionicSessionEngine::startSession(const SessionLaunchConfig& config, std::s
             virglPid_.store(vpid);
             appendLog("[MALI-VIRGL] Started virgl_test_server_android PID=" + std::to_string(vpid));
         }
+    }
+
+    if (access(xvfbBin.c_str(), R_OK) == 0) {
+        chmod(xvfbBin.c_str(), 0755);
+        pid_t xpid = fork();
+        if (xpid == 0) {
+            close(logPipe[0]);
+            dup2(logPipe[1], STDOUT_FILENO);
+            dup2(logPipe[1], STDERR_FILENO);
+            close(logPipe[1]);
+            close(inPipe[0]);
+            close(inPipe[1]);
+
+            setenv("GTASA_RUNTIME_ROOT", config.runtimeRootDir.c_str(), 1);
+            setenv("HOME", prefixDir.c_str(), 1);
+            setenv("TMPDIR", tmpDir.c_str(), 1);
+            setenv("PATH", runtimePathEnv.c_str(), 1);
+            setenv("LD_LIBRARY_PATH", ldLibPath.c_str(), 1);
+            if (!ldPreload.empty()) {
+                setenv("LD_PRELOAD", ldPreload.c_str(), 1);
+            }
+
+            std::string screenArg = std::to_string(fbWidth_) + "x" + std::to_string(fbHeight_) + "x24";
+            execl(
+                xvfbBin.c_str(),
+                xvfbBin.c_str(),
+                ":0",
+                "-screen", "0", screenArg.c_str(),
+                "-fbdir", tmpDir.c_str(),
+                "-nolisten", "tcp",
+                "-ac",
+                static_cast<char*>(nullptr)
+            );
+            _exit(127);
+        } else if (xpid > 0) {
+            x11Pid_.store(xpid);
+            appendLog("[X11] Started Xvfb Virtual Framebuffer Server PID=" + std::to_string(xpid) +
+                      " (:0 @ " + std::to_string(fbWidth_) + "x" + std::to_string(fbHeight_) + ")");
+            for (int i = 0; i < 20; ++i) {
+                struct stat stSock {};
+                if (stat((x11SocketDir + "/X0").c_str(), &stSock) == 0 ||
+                    stat((tmpDir + "/.X11-unix/X0").c_str(), &stSock) == 0) {
+                    break;
+                }
+                usleep(15000);
+            }
+            std::string xvfbScreen = tmpDir + "/Xvfb_screen0";
+            if (access(xvfbScreen.c_str(), R_OK) == 0) {
+                fbSharedPath_ = xvfbScreen;
+            }
+        }
+    } else if (access(termuxX11Bin.c_str(), R_OK) == 0) {
+        chmod(termuxX11Bin.c_str(), 0755);
+        pid_t xpid = fork();
+        if (xpid == 0) {
+            close(logPipe[0]);
+            dup2(logPipe[1], STDOUT_FILENO);
+            dup2(logPipe[1], STDERR_FILENO);
+            close(logPipe[1]);
+            close(inPipe[0]);
+            close(inPipe[1]);
+
+            setenv("GTASA_RUNTIME_ROOT", config.runtimeRootDir.c_str(), 1);
+            setenv("HOME", prefixDir.c_str(), 1);
+            setenv("TMPDIR", tmpDir.c_str(), 1);
+            setenv("PATH", runtimePathEnv.c_str(), 1);
+            setenv("LD_LIBRARY_PATH", ldLibPath.c_str(), 1);
+            if (!ldPreload.empty()) {
+                setenv("LD_PRELOAD", ldPreload.c_str(), 1);
+            }
+
+            execl(
+                termuxX11Bin.c_str(),
+                termuxX11Bin.c_str(),
+                ":0",
+                "-ac",
+                static_cast<char*>(nullptr)
+            );
+            _exit(127);
+        } else if (xpid > 0) {
+            x11Pid_.store(xpid);
+            appendLog("[X11] Started termux-x11 Display Server PID=" + std::to_string(xpid));
+            for (int i = 0; i < 20; ++i) {
+                struct stat stSock {};
+                if (stat((x11SocketDir + "/X0").c_str(), &stSock) == 0 ||
+                    stat((tmpDir + "/.X11-unix/X0").c_str(), &stSock) == 0) {
+                    break;
+                }
+                usleep(15000);
+            }
+        }
+    } else {
+        appendLog("[X11] No external X-server detected; running Wine with headless null graphics driver");
     }
 
     std::string desktopArg = "/desktop=GTASA," + std::to_string(fbWidth_) + "x" + std::to_string(fbHeight_);
@@ -755,6 +857,23 @@ void BionicSessionEngine::stopSession() {
         kill(vpid, SIGKILL);
         int status = 0;
         waitpid(vpid, &status, 0);
+    }
+
+    pid_t xpid = x11Pid_.exchange(-1);
+    if (xpid > 0) {
+        kill(xpid, SIGTERM);
+        int status = 0;
+        for (int i = 0; i < 5; ++i) {
+            if (waitpid(xpid, &status, WNOHANG) == xpid) {
+                xpid = -1;
+                break;
+            }
+            usleep(20000);
+        }
+        if (xpid > 0) {
+            kill(xpid, SIGKILL);
+            waitpid(xpid, &status, 0);
+        }
     }
 
     if (logThread_.joinable()) {

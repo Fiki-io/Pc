@@ -760,20 +760,46 @@ int fchmodat(int dirfd, const char* pathname, mode_t mode, int flags) {
     return fn(dirfd, mapped, mode, flags);
 }
 
-__attribute__((visibility("default")))
-int bind(int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
-    static BindFn fn = resolveNext<BindFn>("bind");
+template <typename SocketOpFn>
+int dispatchUnixSocket(SocketOpFn fn, int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
     if (addr != nullptr && addr->sa_family == AF_UNIX &&
         static_cast<size_t>(addrlen) > sizeof(sa_family_t)) {
         const auto* un = reinterpret_cast<const struct sockaddr_un*>(addr);
         if (un->sun_path[0] == '/') {
             char buf[4096];
             const char* mapped = remapPath(un->sun_path, buf, sizeof(buf));
-            if (mapped != un->sun_path && strlen(mapped) < sizeof(un->sun_path)) {
-                struct sockaddr_un patched {};
-                patched.sun_family = AF_UNIX;
-                strncpy(patched.sun_path, mapped, sizeof(patched.sun_path) - 1);
-                return fn(sockfd, reinterpret_cast<const struct sockaddr*>(&patched), sizeof(patched));
+            if (mapped != un->sun_path) {
+                if (strlen(mapped) < sizeof(un->sun_path)) {
+                    struct sockaddr_un patched {};
+                    patched.sun_family = AF_UNIX;
+                    strncpy(patched.sun_path, mapped, sizeof(patched.sun_path) - 1);
+                    return fn(sockfd, reinterpret_cast<const struct sockaddr*>(&patched), sizeof(patched));
+                } else {
+                    // Path exceeds 108 bytes limit of sockaddr_un.
+                    // Switch to parent directory and perform operation using relative path.
+                    const char* lastSlash = strrchr(mapped, '/');
+                    if (lastSlash != nullptr && lastSlash != mapped) {
+                        std::string parentDir(mapped, lastSlash - mapped);
+                        const char* baseName = lastSlash + 1;
+                        if (strlen(baseName) < sizeof(un->sun_path)) {
+                            int oldCwd = open(".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+                            if (oldCwd >= 0) {
+                                if (chdir(parentDir.c_str()) == 0) {
+                                    struct sockaddr_un relPatched {};
+                                    relPatched.sun_family = AF_UNIX;
+                                    strncpy(relPatched.sun_path, baseName, sizeof(relPatched.sun_path) - 1);
+                                    int res = fn(sockfd, reinterpret_cast<const struct sockaddr*>(&relPatched), sizeof(relPatched));
+                                    int saveErr = errno;
+                                    fchdir(oldCwd);
+                                    close(oldCwd);
+                                    errno = saveErr;
+                                    return res;
+                                }
+                                close(oldCwd);
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -781,23 +807,15 @@ int bind(int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
 }
 
 __attribute__((visibility("default")))
+int bind(int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
+    static BindFn fn = resolveNext<BindFn>("bind");
+    return dispatchUnixSocket(fn, sockfd, addr, addrlen);
+}
+
+__attribute__((visibility("default")))
 int connect(int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
     static ConnectFn fn = resolveNext<ConnectFn>("connect");
-    if (addr != nullptr && addr->sa_family == AF_UNIX &&
-        static_cast<size_t>(addrlen) > sizeof(sa_family_t)) {
-        const auto* un = reinterpret_cast<const struct sockaddr_un*>(addr);
-        if (un->sun_path[0] == '/') {
-            char buf[4096];
-            const char* mapped = remapPath(un->sun_path, buf, sizeof(buf));
-            if (mapped != un->sun_path && strlen(mapped) < sizeof(un->sun_path)) {
-                struct sockaddr_un patched {};
-                patched.sun_family = AF_UNIX;
-                strncpy(patched.sun_path, mapped, sizeof(patched.sun_path) - 1);
-                return fn(sockfd, reinterpret_cast<const struct sockaddr*>(&patched), sizeof(patched));
-            }
-        }
-    }
-    return fn(sockfd, addr, addrlen);
+    return dispatchUnixSocket(fn, sockfd, addr, addrlen);
 }
 
 __attribute__((visibility("default")))
