@@ -87,6 +87,9 @@ class RunnerRepository(
     }
 
     suspend fun verifyInstalledRuntime(): RuntimeVerificationState = withContext(Dispatchers.IO) {
+        if (getRuntimeDir().exists()) {
+            ensureXvfbAvailable()
+        }
         val lastSha = appContext.runnerDataStore.data.first()[prefLastSha256].orEmpty()
         nativeBridge.verifyInstalledRuntime(getRuntimeDir().absolutePath, lastSha)
     }
@@ -321,6 +324,7 @@ class RunnerRepository(
 
     suspend fun startSession(profile: ExecutionProfileConfig): Result<Unit> =
         withContext(Dispatchers.IO) {
+            ensureXvfbAvailable()
             nativeBridge.startSession(
                 runtimeRootDir = getRuntimeDir().absolutePath,
                 gameDirPath = getGameDir().absolutePath,
@@ -328,6 +332,33 @@ class RunnerRepository(
                 profile = profile
             )
         }
+
+    private fun ensureXvfbAvailable() {
+        val runtimeDir = getRuntimeDir()
+        if (!runtimeDir.exists()) return
+        val xvfbBin = File(runtimeDir, "bin/Xvfb")
+        if (xvfbBin.exists() && xvfbBin.length() > 0L) {
+            xvfbBin.setExecutable(true, false)
+            return
+        }
+        try {
+            val assetName = "xvfb-bundle.tar.gz"
+            val tempArchive = File(getStagingDir(), assetName)
+            appContext.assets.open(assetName).use { input ->
+                FileOutputStream(tempArchive).use { output ->
+                    input.copyTo(output)
+                }
+            }
+            nativeBridge.extractRuntimeArchive(tempArchive.absolutePath, runtimeDir.absolutePath)
+            tempArchive.delete()
+            val extractedXvfb = File(runtimeDir, "bin/Xvfb")
+            if (extractedXvfb.exists()) {
+                extractedXvfb.setExecutable(true, false)
+            }
+        } catch (_: Exception) {
+            // Graceful fallback if asset cannot be extracted
+        }
+    }
 
     suspend fun stopSession() = withContext(Dispatchers.IO) {
         nativeBridge.stopSession()

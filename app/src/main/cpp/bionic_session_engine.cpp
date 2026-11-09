@@ -649,6 +649,21 @@ bool BionicSessionEngine::startSession(const SessionLaunchConfig& config, std::s
                 "-ac",
                 static_cast<char*>(nullptr)
             );
+            int directErr = errno;
+            execl(
+                "/system/bin/linker64",
+                "/system/bin/linker64",
+                xvfbBin.c_str(),
+                ":0",
+                "-screen", "0", screenArg.c_str(),
+                "-fbdir", tmpDir.c_str(),
+                "-nolisten", "tcp",
+                "-ac",
+                static_cast<char*>(nullptr)
+            );
+            std::fprintf(stderr, "[XVFB-EXEC-ERR] direct=%s linker=%s\n",
+                         std::strerror(directErr), std::strerror(errno));
+            std::fflush(stderr);
             _exit(127);
         } else if (xpid > 0) {
             x11Pid_.store(xpid);

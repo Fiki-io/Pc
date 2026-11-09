@@ -15,10 +15,11 @@
 .cxx
 local.properties
 .env
-debug.keystore
 *.jks
 /dist
 /build-work
 /out-dlls
 /debs
+__pycache__/
+*.pyc
 
